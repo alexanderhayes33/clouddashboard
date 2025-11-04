@@ -20,6 +20,7 @@ import {
   User,
   LogOut,
   Shield,
+  ShoppingCart,
 } from 'lucide-react'
 
 export default function Navbar() {
@@ -65,6 +66,13 @@ export default function Navbar() {
               >
                 <Server className="h-4 w-4" />
                 <span className="hidden sm:inline">บริการของฉัน</span>
+              </Link>
+              <Link
+                href="/purchase"
+                className="flex items-center gap-1 sm:gap-2 text-gray-700 hover:text-primary-600 px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                <span className="hidden sm:inline">สั่งซื้อบริการ</span>
               </Link>
               {user?.role === 'admin' && (
                 <Link
@@ -127,6 +135,12 @@ export default function Navbar() {
                   <Link href="/services" className="flex items-center gap-2 cursor-pointer">
                     <Server className="h-4 w-4" />
                     บริการของฉัน
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/purchase" className="flex items-center gap-2 cursor-pointer">
+                    <ShoppingCart className="h-4 w-4" />
+                    สั่งซื้อบริการ
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

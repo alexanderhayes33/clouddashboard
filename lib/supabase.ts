@@ -93,3 +93,19 @@ export interface CloudMachineService {
   updated_at: string
 }
 
+export interface CloudServicePackage {
+  id: string
+  name: string
+  description?: string
+  price: number
+  currency: string
+  duration_months: number
+  machine_type: string
+  machine_specs: MachineSpecs
+  usage_limit_per_month: number
+  is_active: boolean
+  display_order: number
+  created_at: string
+  updated_at: string
+}
+
