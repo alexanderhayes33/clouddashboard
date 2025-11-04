@@ -6,7 +6,19 @@ import { useAuthStore } from '@/store/authStore'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import Navbar from '@/components/Navbar'
 import { CloudServicePackage } from '@/lib/supabase'
-import { ShoppingCart, Check, Loader2 } from 'lucide-react'
+import {
+  ShoppingCart,
+  Loader2,
+  Cpu,
+  HardDrive,
+  Wifi,
+  Monitor,
+  Zap,
+  Calendar,
+  Check,
+  ArrowRight,
+  Sparkles,
+} from 'lucide-react'
 
 export default function PurchasePage() {
   return (
@@ -54,11 +66,9 @@ function PurchaseContent() {
     setCreatingInvoice(true)
 
     try {
-      // คำนวณวันครบกำหนด
       const dueDate = new Date()
       dueDate.setMonth(dueDate.getMonth() + package_.duration_months)
 
-      // สร้าง invoice
       const response = await fetch('/api/invoices', {
         method: 'POST',
         headers: {
@@ -88,7 +98,6 @@ function PurchaseContent() {
         return
       }
 
-      // Redirect ไปหน้า invoices เพื่อชำระเงิน
       router.push('/invoices')
     } catch (error) {
       console.error('Error creating invoice:', error)
@@ -100,7 +109,7 @@ function PurchaseContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
           <p className="mt-4 text-gray-700 font-medium">กำลังโหลดข้อมูล...</p>
@@ -110,143 +119,166 @@ function PurchaseContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">สั่งซื้อบริการใหม่</h1>
-          <p className="mt-2 text-gray-600">เลือกแพ็กเกจบริการที่เหมาะกับคุณ</p>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            สั่งซื้อบริการใหม่
+          </h1>
+          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
+            เลือกแพ็กเกจบริการที่เหมาะกับคุณ
+          </p>
         </div>
 
         {packages.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
+          <div className="bg-white rounded-xl shadow-sm p-8 sm:p-12 text-center border border-gray-200">
             <ShoppingCart className="mx-auto h-16 w-16 text-gray-400 mb-4" />
             <p className="text-gray-700 font-medium text-lg">ยังไม่มีแพ็กเกจบริการ</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="overflow-x-auto -mx-4 sm:mx-0">
-              <div className="inline-block min-w-full align-middle">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        ชื่อแพ็กเกจ
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">
-                        รายละเอียด
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {packages.map((package_) => {
+              const isCreating = creatingInvoice && selectedPackage?.id === package_.id
+              const isPopular = package_.name.toLowerCase().includes('standard') || 
+                               package_.name.toLowerCase().includes('premium')
+
+              return (
+                <div
+                  key={package_.id}
+                  className={`bg-white rounded-xl shadow-sm border-2 overflow-hidden transition-all hover:shadow-lg ${
+                    isPopular
+                      ? 'border-primary-300 bg-gradient-to-br from-white to-primary-50/30'
+                      : 'border-gray-200 hover:border-primary-300'
+                  }`}
+                >
+                  {isPopular && (
+                    <div className="bg-primary-600 text-white text-xs font-semibold px-4 py-1 text-center">
+                      <Sparkles className="h-3 w-3 inline mr-1" />
+                      แนะนำ
+                    </div>
+                  )}
+                  
+                  <div className="p-4 sm:p-6">
+                    {/* Header */}
+                    <div className="mb-4">
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">
+                        {package_.name}
+                      </h3>
+                      {package_.description && (
+                        <p className="text-sm text-gray-600">{package_.description}</p>
+                      )}
+                    </div>
+
+                    {/* Price */}
+                    <div className="mb-4 pb-4 border-b border-gray-200">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl sm:text-4xl font-bold text-primary-600">
+                          {package_.price.toLocaleString()}
+                        </span>
+                        <span className="text-sm text-gray-600">{package_.currency}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Calendar className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm text-gray-600">
+                          {package_.duration_months === 1
+                            ? '1 เดือน'
+                            : package_.duration_months === 3
+                            ? '3 เดือน'
+                            : package_.duration_months === 12
+                            ? '1 ปี'
+                            : `${package_.duration_months} เดือน`}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Specs */}
+                    <div className="mb-4 space-y-2">
+                      <h4 className="text-sm font-semibold text-gray-900 mb-2">
                         สเปคเครื่อง
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden lg:table-cell">
-                        การใช้งาน/เดือน
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        ระยะเวลา
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        ราคา
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {packages.map((package_) => (
-                      <tr key={package_.id} className="hover:bg-gray-50">
-                        <td className="px-3 sm:px-6 py-4">
-                          <div className="text-sm font-semibold text-gray-900">
-                            {package_.name}
+                      </h4>
+                      <div className="space-y-2">
+                        {package_.machine_specs?.cpu && (
+                          <div className="flex items-center gap-2 text-sm text-gray-700">
+                            <Cpu className="h-4 w-4 text-blue-600" />
+                            <span>{package_.machine_specs.cpu}</span>
                           </div>
-                          <div className="md:hidden text-xs text-gray-500 mt-1">
-                            {package_.description}
+                        )}
+                        {package_.machine_specs?.ram && (
+                          <div className="flex items-center gap-2 text-sm text-gray-700">
+                            <Zap className="h-4 w-4 text-yellow-600" />
+                            <span>{package_.machine_specs.ram}</span>
                           </div>
-                        </td>
-                        <td className="px-3 sm:px-6 py-4 text-sm text-gray-500 hidden md:table-cell">
-                          {package_.description || '-'}
-                        </td>
-                        <td className="px-3 sm:px-6 py-4">
-                          <div className="text-xs text-gray-600 space-y-1">
-                            {package_.machine_specs?.cpu && (
-                              <div>CPU: <span className="font-medium">{package_.machine_specs.cpu}</span></div>
-                            )}
-                            {package_.machine_specs?.ram && (
-                              <div>RAM: <span className="font-medium">{package_.machine_specs.ram}</span></div>
-                            )}
-                            {package_.machine_specs?.storage && (
-                              <div>Storage: <span className="font-medium">{package_.machine_specs.storage}</span></div>
-                            )}
-                            {package_.machine_specs?.bandwidth && (
-                              <div>Bandwidth: <span className="font-medium">{package_.machine_specs.bandwidth}</span></div>
-                            )}
-                            {package_.machine_specs?.os && (
-                              <div>OS: <span className="font-medium">{package_.machine_specs.os}</span></div>
-                            )}
-                            {package_.machine_specs?.gpu && (
-                              <div>GPU: <span className="font-medium">{package_.machine_specs.gpu}</span></div>
-                            )}
-                            <div className="text-gray-400">Type: {package_.machine_type}</div>
+                        )}
+                        {package_.machine_specs?.storage && (
+                          <div className="flex items-center gap-2 text-sm text-gray-700">
+                            <HardDrive className="h-4 w-4 text-green-600" />
+                            <span>{package_.machine_specs.storage}</span>
                           </div>
-                        </td>
-                        <td className="px-3 sm:px-6 py-4 text-sm text-gray-500 hidden lg:table-cell">
-                          {package_.usage_limit_per_month > 0
-                            ? package_.usage_limit_per_month.toLocaleString() + ' ครั้ง'
-                            : 'ไม่จำกัด'}
-                        </td>
-                        <td className="px-3 sm:px-6 py-4">
-                          <div className="text-sm text-gray-900">
-                            {package_.duration_months === 1
-                              ? '1 เดือน'
-                              : package_.duration_months === 3
-                              ? '3 เดือน'
-                              : package_.duration_months === 12
-                              ? '1 ปี'
-                              : `${package_.duration_months} เดือน`}
+                        )}
+                        {package_.machine_specs?.bandwidth && (
+                          <div className="flex items-center gap-2 text-sm text-gray-700">
+                            <Wifi className="h-4 w-4 text-purple-600" />
+                            <span>{package_.machine_specs.bandwidth}</span>
                           </div>
-                          <div className="lg:hidden text-xs text-gray-500 mt-1">
-                            {package_.usage_limit_per_month > 0
-                              ? package_.usage_limit_per_month.toLocaleString() + ' ครั้ง/เดือน'
-                              : 'ไม่จำกัด'}
+                        )}
+                        {package_.machine_specs?.os && (
+                          <div className="flex items-center gap-2 text-sm text-gray-700">
+                            <Monitor className="h-4 w-4 text-gray-600" />
+                            <span>{package_.machine_specs.os}</span>
                           </div>
-                        </td>
-                        <td className="px-3 sm:px-6 py-4">
-                          <div className="text-sm font-bold text-primary-600">
-                            {package_.price.toLocaleString()} {package_.currency}
+                        )}
+                        {package_.machine_specs?.gpu && (
+                          <div className="flex items-center gap-2 text-sm text-gray-700">
+                            <Monitor className="h-4 w-4 text-indigo-600" />
+                            <span>{package_.machine_specs.gpu}</span>
                           </div>
-                        </td>
-                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button
-                            onClick={() => handlePurchase(package_)}
-                            disabled={creatingInvoice && selectedPackage?.id === package_.id}
-                            className="flex items-center gap-2 bg-primary-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition text-xs sm:text-sm"
-                          >
-                            {creatingInvoice && selectedPackage?.id === package_.id ? (
-                              <>
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                <span className="hidden sm:inline">กำลังสร้างบิล...</span>
-                                <span className="sm:hidden">กำลัง...</span>
-                              </>
-                            ) : (
-                              <>
-                                <ShoppingCart className="h-4 w-4" />
-                                <span className="hidden sm:inline">สั่งซื้อ</span>
-                                <span className="sm:hidden">ซื้อ</span>
-                              </>
-                            )}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Usage Limit */}
+                    {package_.usage_limit_per_month > 0 && (
+                      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-2 text-sm text-gray-700">
+                          <Check className="h-4 w-4 text-green-600" />
+                          <span>
+                            การใช้งาน: {package_.usage_limit_per_month.toLocaleString()} ครั้ง/เดือน
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Action Button */}
+                    <button
+                      onClick={() => handlePurchase(package_)}
+                      disabled={isCreating}
+                      className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition ${
+                        isPopular
+                          ? 'bg-primary-600 text-white hover:bg-primary-700'
+                          : 'bg-gray-900 text-white hover:bg-gray-800'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      {isCreating ? (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          <span>กำลังสร้างบิล...</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="h-5 w-5" />
+                          <span>สั่งซื้อ</span>
+                          <ArrowRight className="h-4 w-4" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
       </main>
     </div>
   )
 }
-

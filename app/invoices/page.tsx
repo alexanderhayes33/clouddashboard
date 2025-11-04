@@ -2,13 +2,27 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useAuthStore } from '@/store/authStore'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import Navbar from '@/components/Navbar'
 import { CloudInvoice } from '@/lib/supabase'
-import { format } from 'date-fns'
+import { format, differenceInDays } from 'date-fns'
 import { th } from 'date-fns/locale'
 import { checkPaymentStatus } from '@/lib/qr-payment'
+import {
+  FileText,
+  CreditCard,
+  Calendar,
+  CheckCircle,
+  XCircle,
+  Clock,
+  AlertCircle,
+  QrCode,
+  X,
+  Loader2,
+  CheckCircle2,
+} from 'lucide-react'
 
 export default function InvoicesPage() {
   return (
@@ -36,7 +50,6 @@ function InvoicesContent() {
   }, [token])
 
   useEffect(() => {
-    // Cleanup polling when component unmounts
     return () => {
       if (pollingInterval) {
         clearInterval(pollingInterval)
@@ -85,7 +98,6 @@ function InvoicesContent() {
       setQrImage(data.qr_image_base64)
       setPaymentId(data.payment_id)
 
-      // เริ่ม polling เพื่อตรวจสอบสถานะ
       startPolling(data.payment_id, invoice.id)
     } catch (error) {
       console.error('Error creating payment:', error)
@@ -94,7 +106,6 @@ function InvoicesContent() {
   }
 
   const startPolling = (idPay: string, invoiceId: string) => {
-    // Clear existing interval
     if (pollingInterval) {
       clearInterval(pollingInterval)
     }
@@ -108,7 +119,6 @@ function InvoicesContent() {
           setPaymentStatus('paid')
           setPollingInterval(null)
 
-          // อัพเดท invoice ผ่าน check-payment API
           await fetch(`/api/invoices/${invoiceId}/check-payment`, {
             method: 'POST',
             headers: {
@@ -116,10 +126,8 @@ function InvoicesContent() {
             },
           })
 
-          // Refresh invoices
           await fetchInvoices()
 
-          // แสดงข้อความสำเร็จ
           setTimeout(() => {
             setSelectedInvoice(null)
             setQrImage(null)
@@ -135,7 +143,7 @@ function InvoicesContent() {
       } catch (error) {
         console.error('Error checking payment status:', error)
       }
-    }, 5000) // ตรวจสอบทุก 5 วินาที
+    }, 5000)
 
     setPollingInterval(interval)
   }
@@ -153,7 +161,7 @@ function InvoicesContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
           <p className="mt-4 text-gray-700 font-medium">กำลังโหลดข้อมูล...</p>
@@ -163,249 +171,271 @@ function InvoicesContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">บิลของฉัน</h1>
-          <p className="mt-2 text-gray-600">ดูและชำระบิลของคุณ</p>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">บิลของฉัน</h1>
+          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
+            ดูและชำระบิลของคุณ
+          </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          {invoices.length === 0 ? (
-            <div className="p-8 text-center">
-              <svg
-                className="mx-auto h-12 w-12 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <p className="mt-4 text-gray-700 font-medium">ยังไม่มีบิล</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto -mx-4 sm:mx-0">
-              <div className="inline-block min-w-full align-middle">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        เลขที่บิล
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">
-                        จำนวนเงิน
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        สถานะ
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">
-                        วันครบกำหนด
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                  {invoices.map((invoice) => {
-                    const isOverdue =
-                      invoice.status === 'pending' &&
-                      new Date(invoice.due_date) < new Date()
-
-                    return (
-                      <tr key={invoice.id} className={isOverdue ? 'bg-red-50' : ''}>
-                        <td className="px-3 sm:px-6 py-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {invoice.invoice_number}
-                          </div>
-                          {invoice.description && (
-                            <div className="text-xs sm:text-sm text-gray-500 mt-1">{invoice.description}</div>
-                          )}
-                          {invoice.machine_specs && (
-                            <div className="text-xs text-gray-400 mt-1">
-                              {invoice.machine_specs.cpu && `CPU: ${invoice.machine_specs.cpu}`}
-                              {invoice.machine_specs.ram && ` | RAM: ${invoice.machine_specs.ram}`}
-                            </div>
-                          )}
-                          <div className="sm:hidden text-sm font-semibold text-gray-900 mt-2">
-                            {invoice.amount.toLocaleString()} {invoice.currency}
-                          </div>
-                          <div className="sm:hidden text-xs text-gray-500 mt-1">
-                            {format(new Date(invoice.due_date), 'dd MMM yyyy', { locale: th })}
-                          </div>
-                        </td>
-                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 hidden sm:table-cell">
-                          {invoice.amount.toLocaleString()} {invoice.currency}
-                        </td>
-                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                              invoice.status === 'paid'
-                                ? 'bg-green-100 text-green-800'
-                                : isOverdue
-                                ? 'bg-red-100 text-red-800'
-                                : invoice.status === 'cancelled'
-                                ? 'bg-gray-100 text-gray-800'
-                                : 'bg-yellow-100 text-yellow-800'
-                            }`}
-                          >
-                            {invoice.status === 'paid'
-                              ? 'ชำระแล้ว'
-                              : isOverdue
-                              ? 'เลยกำหนด'
-                              : invoice.status === 'cancelled'
-                              ? 'ยกเลิก'
-                              : 'รอชำระ'}
-                          </span>
-                        </td>
-                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
-                          {format(new Date(invoice.due_date), 'dd MMMM yyyy', { locale: th })}
-                          {isOverdue && (
-                            <div className="text-xs text-red-600 mt-1">เลยกำหนดแล้ว</div>
-                          )}
-                        </td>
-                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          {invoice.status === 'pending' && !isOverdue && (
-                            <button
-                              onClick={() => handlePay(invoice)}
-                              className="text-primary-600 hover:text-primary-900 font-medium"
-                            >
-                              ชำระเงิน
-                            </button>
-                          )}
-                          {invoice.status === 'paid' && invoice.paid_at && (
-                            <div className="text-sm text-gray-500">
-                              ชำระเมื่อ:{' '}
-                              {format(new Date(invoice.paid_at), 'dd/MM/yyyy HH:mm', { locale: th })}
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+        {invoices.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-sm p-8 sm:p-12 text-center border border-gray-200">
+            <FileText className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+            <p className="text-gray-700 font-medium text-lg mb-2">ยังไม่มีบิล</p>
+            <Link
+              href="/purchase"
+              className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+            >
+              สั่งซื้อบริการ
+            </Link>
           </div>
-          )}
-        </div>
-      </main>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            {invoices.map((invoice) => {
+              const isOverdue =
+                invoice.status === 'pending' &&
+                new Date(invoice.due_date) < new Date()
+              const daysUntilDue = differenceInDays(
+                new Date(invoice.due_date),
+                new Date()
+              )
 
-      {/* Payment Modal */}
-      {selectedInvoice && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 px-4">
-          <div className="relative top-10 sm:top-20 mx-auto p-4 sm:p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-gray-900">ชำระเงิน</h3>
-              <button
-                onClick={handleCloseModal}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            {paymentStatus === 'paid' ? (
-              <div className="text-center py-8">
-                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
-                  <svg
-                    className="h-8 w-8 text-green-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-                <h4 className="text-xl font-bold text-gray-900 mb-2">ชำระเงินสำเร็จ!</h4>
-                <p className="text-gray-700 font-medium">บิลของคุณถูกชำระเรียบร้อยแล้ว</p>
-              </div>
-            ) : paymentStatus === 'timeout' ? (
-              <div className="text-center py-8">
-                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
-                  <svg
-                    className="h-8 w-8 text-red-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </div>
-                <h4 className="text-xl font-bold text-gray-900 mb-2">QR Code หมดอายุ</h4>
-                <p className="text-gray-700 font-medium mb-4">กรุณากดปุ่มชำระเงินอีกครั้งเพื่อสร้าง QR Code ใหม่</p>
-                <button
-                  onClick={() => handlePay(selectedInvoice)}
-                  className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700"
+              return (
+                <div
+                  key={invoice.id}
+                  className={`bg-white rounded-xl shadow-sm border-2 overflow-hidden transition-all hover:shadow-md ${
+                    isOverdue
+                      ? 'border-red-200 bg-red-50/30'
+                      : invoice.status === 'paid'
+                      ? 'border-green-200 bg-green-50/30'
+                      : 'border-gray-200 hover:border-primary-300'
+                  }`}
                 >
-                  สร้าง QR Code ใหม่
+                  <div className="p-4 sm:p-6">
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <FileText className="h-5 w-5 text-gray-600" />
+                          <h3 className="text-lg font-bold text-gray-900">
+                            {invoice.invoice_number}
+                          </h3>
+                        </div>
+                        {invoice.description && (
+                          <p className="text-sm text-gray-600 mb-2">
+                            {invoice.description}
+                          </p>
+                        )}
+                        {invoice.machine_specs && (
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {invoice.machine_specs.cpu && (
+                              <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                                {invoice.machine_specs.cpu}
+                              </span>
+                            )}
+                            {invoice.machine_specs.ram && (
+                              <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                                {invoice.machine_specs.ram}
+                              </span>
+                            )}
+                            {invoice.machine_specs.storage && (
+                              <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                                {invoice.machine_specs.storage}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <span
+                        className={`px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${
+                          invoice.status === 'paid'
+                            ? 'bg-green-100 text-green-800'
+                            : isOverdue
+                            ? 'bg-red-100 text-red-800'
+                            : invoice.status === 'cancelled'
+                            ? 'bg-gray-100 text-gray-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}
+                      >
+                        {invoice.status === 'paid'
+                          ? 'ชำระแล้ว'
+                          : isOverdue
+                          ? 'เลยกำหนด'
+                          : invoice.status === 'cancelled'
+                          ? 'ยกเลิก'
+                          : 'รอชำระ'}
+                      </span>
+                    </div>
+
+                    {/* Amount */}
+                    <div className="mb-4">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl sm:text-3xl font-bold text-gray-900">
+                          {invoice.amount.toLocaleString()}
+                        </span>
+                        <span className="text-sm text-gray-600">{invoice.currency}</span>
+                      </div>
+                    </div>
+
+                    {/* Details */}
+                    <div className="space-y-2 mb-4 text-sm">
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Calendar className="h-4 w-4" />
+                        <span>
+                          ครบกำหนด:{' '}
+                          <span className="font-medium text-gray-900">
+                            {format(new Date(invoice.due_date), 'dd MMMM yyyy', {
+                              locale: th,
+                            })}
+                          </span>
+                        </span>
+                      </div>
+                      {invoice.status === 'pending' && !isOverdue && (
+                        <div className="flex items-center gap-2 text-blue-600">
+                          <Clock className="h-4 w-4" />
+                          <span>
+                            เหลืออีก {daysUntilDue} วัน
+                          </span>
+                        </div>
+                      )}
+                      {isOverdue && (
+                        <div className="flex items-center gap-2 text-red-600">
+                          <AlertCircle className="h-4 w-4" />
+                          <span className="font-medium">เลยกำหนดชำระแล้ว</span>
+                        </div>
+                      )}
+                      {invoice.status === 'paid' && invoice.paid_at && (
+                        <div className="flex items-center gap-2 text-green-600">
+                          <CheckCircle className="h-4 w-4" />
+                          <span>
+                            ชำระเมื่อ:{' '}
+                            {format(new Date(invoice.paid_at), 'dd/MM/yyyy HH:mm', {
+                              locale: th,
+                            })}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="mt-4">
+                      {invoice.status === 'pending' && !isOverdue && (
+                        <button
+                          onClick={() => handlePay(invoice)}
+                          className="w-full flex items-center justify-center gap-2 bg-primary-600 text-white px-4 py-3 rounded-lg hover:bg-primary-700 transition font-medium"
+                        >
+                          <CreditCard className="h-5 w-5" />
+                          <span>ชำระเงิน</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* QR Payment Modal */}
+        {selectedInvoice && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <QrCode className="h-5 w-5" />
+                  ชำระเงิน
+                </h3>
+                <button
+                  onClick={handleCloseModal}
+                  className="text-gray-400 hover:text-gray-600 transition"
+                >
+                  <X className="h-5 w-5" />
                 </button>
               </div>
-            ) : qrImage ? (
-              <div>
-                <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="text-sm text-gray-600 mb-2">เลขที่บิล: {selectedInvoice.invoice_number}</div>
-                  <div className="text-lg font-bold text-gray-900">
-                    จำนวนเงิน: {selectedInvoice.amount.toLocaleString()} {selectedInvoice.currency}
-                  </div>
-                </div>
 
-                <div className="text-center mb-4">
-                  <div className="inline-block p-2 sm:p-4 bg-white rounded-lg border-2 border-gray-200">
-                    <img
-                      src={`data:image/png;base64,${qrImage}`}
-                      alt="QR Code"
-                      className="w-48 h-48 sm:w-64 sm:h-64 mx-auto"
-                    />
+              <div className="p-4 sm:p-6">
+                {paymentStatus === 'paid' ? (
+                  <div className="text-center py-8">
+                    <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                      <CheckCircle2 className="h-8 w-8 text-green-600" />
+                    </div>
+                    <h4 className="text-xl font-bold text-gray-900 mb-2">
+                      ชำระเงินสำเร็จ!
+                    </h4>
+                    <p className="text-gray-700 font-medium">
+                      บิลของคุณถูกชำระเรียบร้อยแล้ว
+                    </p>
                   </div>
-                  <p className="mt-4 text-sm text-gray-600">
-                    สแกน QR Code เพื่อชำระเงินผ่าน PromptPay
-                  </p>
-                  <p className="mt-2 text-xs text-gray-500">
-                    กำลังตรวจสอบสถานะการชำระเงิน...
-                  </p>
-                </div>
+                ) : paymentStatus === 'timeout' ? (
+                  <div className="text-center py-8">
+                    <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                      <XCircle className="h-8 w-8 text-red-600" />
+                    </div>
+                    <h4 className="text-xl font-bold text-gray-900 mb-2">
+                      QR Code หมดอายุ
+                    </h4>
+                    <p className="text-gray-700 font-medium mb-4">
+                      กรุณากดปุ่มชำระเงินอีกครั้งเพื่อสร้าง QR Code ใหม่
+                    </p>
+                    <button
+                      onClick={() => handlePay(selectedInvoice)}
+                      className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition"
+                    >
+                      สร้าง QR Code ใหม่
+                    </button>
+                  </div>
+                ) : qrImage ? (
+                  <div>
+                    <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                      <div className="text-sm text-gray-600 mb-2">
+                        เลขที่บิล: {selectedInvoice.invoice_number}
+                      </div>
+                      <div className="text-lg font-bold text-gray-900">
+                        จำนวนเงิน: {selectedInvoice.amount.toLocaleString()}{' '}
+                        {selectedInvoice.currency}
+                      </div>
+                    </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm text-blue-800">
-                    <strong>หมายเหตุ:</strong> QR Code จะหมดอายุใน 15 นาที
-                    ระบบจะตรวจสอบสถานะการชำระเงินอัตโนมัติ
-                  </p>
-                </div>
+                    <div className="text-center mb-4">
+                      <div className="inline-block p-3 sm:p-4 bg-white rounded-lg border-2 border-gray-200">
+                        <img
+                          src={`data:image/png;base64,${qrImage}`}
+                          alt="QR Code"
+                          className="w-48 h-48 sm:w-64 sm:h-64 mx-auto"
+                        />
+                      </div>
+                      <p className="mt-4 text-sm text-gray-600">
+                        สแกน QR Code เพื่อชำระเงินผ่าน PromptPay
+                      </p>
+                      <div className="mt-2 flex items-center justify-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin text-primary-600" />
+                        <p className="text-xs text-gray-500">
+                          กำลังตรวจสอบสถานะการชำระเงิน...
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <p className="text-sm text-blue-800">
+                        <strong>หมายเหตุ:</strong> ระบบจะตรวจสอบสถานะการชำระเงินอัตโนมัติ
+                        กรุณารอสักครู่
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+                    <p className="text-gray-700 font-medium">กำลังสร้าง QR Code...</p>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-                <p className="mt-4 text-gray-700 font-medium">กำลังสร้าง QR Code...</p>
-              </div>
-            )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </main>
     </div>
   )
 }
-
