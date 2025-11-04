@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -183,13 +184,13 @@ export default function RegisterPage() {
               />
             </div>
 
-            <button
+            <Button
               type="submit"
-              disabled={loading}
-              className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              isLoading={loading}
+              className="w-full"
             >
-              {loading ? 'กำลังสมัครสมาชิก...' : 'สมัครสมาชิก'}
-            </button>
+              สมัครสมาชิก
+            </Button>
           </form>
 
           <div className="mt-6 text-center">

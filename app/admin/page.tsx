@@ -8,6 +8,7 @@ import Navbar from '@/components/Navbar'
 import Link from 'next/link'
 import { CloudUser, CloudInvoice, CloudMachineService } from '@/lib/supabase'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
 
 export default function AdminPage() {
   return (
@@ -317,6 +318,7 @@ function UsersManagement({
 }) {
   const [showModal, setShowModal] = useState(false)
   const [editingUser, setEditingUser] = useState<CloudUser | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -327,6 +329,7 @@ function UsersManagement({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsSubmitting(true)
     try {
       const url = editingUser
         ? `/api/admin/users/${editingUser.id}`
@@ -354,6 +357,8 @@ function UsersManagement({
     } catch (error) {
       console.error('Error:', error)
       alert('เกิดข้อผิดพลาด')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -510,22 +515,22 @@ function UsersManagement({
                 </select>
               </div>
               <div className="flex justify-end space-x-3 pt-4">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => {
                     setShowModal(false)
                     setEditingUser(null)
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                 >
                   ยกเลิก
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+                  isLoading={isSubmitting}
                 >
                   {editingUser ? 'อัพเดท' : 'สร้าง'}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -546,6 +551,7 @@ function InvoicesManagement({
 }) {
   const [showModal, setShowModal] = useState(false)
   const [editingInvoice, setEditingInvoice] = useState<CloudInvoice | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [users, setUsers] = useState<CloudUser[]>([])
   const [formData, setFormData] = useState({
     user_id: '',
@@ -575,6 +581,7 @@ function InvoicesManagement({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsSubmitting(true)
     try {
       // สร้าง machine_specs object จาก formData
       const machineSpecs: any = {}
@@ -648,6 +655,8 @@ function InvoicesManagement({
     } catch (error) {
       console.error('Error:', error)
       alert('เกิดข้อผิดพลาด')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -1015,19 +1024,19 @@ function InvoicesManagement({
               )}
 
               <div className="flex justify-end space-x-3 pt-4">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                 >
                   ยกเลิก
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+                  isLoading={isSubmitting}
                 >
                   {editingInvoice ? 'อัพเดทบิล' : 'สร้างบิล'}
-                </button>
+                </Button>
               </div>
             </form>
           </div>

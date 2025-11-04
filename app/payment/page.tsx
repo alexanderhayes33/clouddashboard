@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import Navbar from '@/components/Navbar'
+import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
 const PLANS = [
@@ -321,13 +322,14 @@ function PaymentContent() {
                     {selectedPlan.amount.toLocaleString()} บาท
                   </span>
                 </div>
-                <button
+                <Button
                   type="submit"
-                  disabled={loading}
-                  className="w-full bg-primary-600 text-white py-3 px-4 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  isLoading={loading}
+                  className="w-full"
+                  size="lg"
                 >
-                  {loading ? 'กำลังดำเนินการ...' : 'ยืนยันการชำระเงิน'}
-                </button>
+                  ยืนยันการชำระเงิน
+                </Button>
               </div>
             </form>
           </div>
