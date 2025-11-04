@@ -190,28 +190,29 @@ function InvoicesContent() {
               <p className="mt-4 text-gray-700 font-medium">ยังไม่มีบิล</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      เลขที่บิล
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      จำนวนเงิน
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      สถานะ
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      วันครบกำหนด
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+            <div className="overflow-x-auto -mx-4 sm:mx-0">
+              <div className="inline-block min-w-full align-middle">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        เลขที่บิล
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">
+                        จำนวนเงิน
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        สถานะ
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">
+                        วันครบกำหนด
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
                   {invoices.map((invoice) => {
                     const isOverdue =
                       invoice.status === 'pending' &&
@@ -219,12 +220,12 @@ function InvoicesContent() {
 
                     return (
                       <tr key={invoice.id} className={isOverdue ? 'bg-red-50' : ''}>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 sm:px-6 py-4">
                           <div className="text-sm font-medium text-gray-900">
                             {invoice.invoice_number}
                           </div>
                           {invoice.description && (
-                            <div className="text-sm text-gray-500">{invoice.description}</div>
+                            <div className="text-xs sm:text-sm text-gray-500 mt-1">{invoice.description}</div>
                           )}
                           {invoice.machine_specs && (
                             <div className="text-xs text-gray-400 mt-1">
@@ -232,11 +233,17 @@ function InvoicesContent() {
                               {invoice.machine_specs.ram && ` | RAM: ${invoice.machine_specs.ram}`}
                             </div>
                           )}
+                          <div className="sm:hidden text-sm font-semibold text-gray-900 mt-2">
+                            {invoice.amount.toLocaleString()} {invoice.currency}
+                          </div>
+                          <div className="sm:hidden text-xs text-gray-500 mt-1">
+                            {format(new Date(invoice.due_date), 'dd MMM yyyy', { locale: th })}
+                          </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 hidden sm:table-cell">
                           {invoice.amount.toLocaleString()} {invoice.currency}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                           <span
                             className={`px-2 py-1 text-xs font-semibold rounded-full ${
                               invoice.status === 'paid'
@@ -257,13 +264,13 @@ function InvoicesContent() {
                               : 'รอชำระ'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
                           {format(new Date(invoice.due_date), 'dd MMMM yyyy', { locale: th })}
                           {isOverdue && (
                             <div className="text-xs text-red-600 mt-1">เลยกำหนดแล้ว</div>
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
                           {invoice.status === 'pending' && !isOverdue && (
                             <button
                               onClick={() => handlePay(invoice)}
@@ -285,14 +292,15 @@ function InvoicesContent() {
                 </tbody>
               </table>
             </div>
+          </div>
           )}
         </div>
       </main>
 
       {/* Payment Modal */}
       {selectedInvoice && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 px-4">
+          <div className="relative top-10 sm:top-20 mx-auto p-4 sm:p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-gray-900">ชำระเงิน</h3>
               <button
@@ -366,11 +374,11 @@ function InvoicesContent() {
                 </div>
 
                 <div className="text-center mb-4">
-                  <div className="inline-block p-4 bg-white rounded-lg border-2 border-gray-200">
+                  <div className="inline-block p-2 sm:p-4 bg-white rounded-lg border-2 border-gray-200">
                     <img
                       src={`data:image/png;base64,${qrImage}`}
                       alt="QR Code"
-                      className="w-64 h-64 mx-auto"
+                      className="w-48 h-48 sm:w-64 sm:h-64 mx-auto"
                     />
                   </div>
                   <p className="mt-4 text-sm text-gray-600">
