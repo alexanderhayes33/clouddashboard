@@ -7,6 +7,7 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import Navbar from '@/components/Navbar'
 import Link from 'next/link'
 import { CloudUser, CloudInvoice, CloudMachineService } from '@/lib/supabase'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function AdminPage() {
   return (
@@ -137,11 +138,48 @@ function AdminContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-700 font-medium">กำลังโหลดข้อมูล...</p>
-        </div>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-8">
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+
+          {/* Tabs Skeleton */}
+          <div className="mb-6 flex gap-4 border-b">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-10 w-24 mb-4" />
+            ))}
+          </div>
+
+          {/* Stats Cards Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-lg shadow p-6">
+                <Skeleton className="h-4 w-24 mb-2" />
+                <Skeleton className="h-8 w-32" />
+              </div>
+            ))}
+          </div>
+
+          {/* Table Skeleton */}
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="p-6">
+              <div className="space-y-4">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex items-center gap-4 pb-4 border-b border-gray-200 last:border-0">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-9 w-20 rounded-lg ml-auto" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     )
   }
@@ -513,7 +551,7 @@ function InvoicesManagement({
     user_id: '',
     amount: '',
     currency: 'THB',
-    due_date: '',
+    usage_days: '',
     description: '',
     machine_specs: {
       cpu: '',
@@ -552,11 +590,16 @@ function InvoicesManagement({
         : '/api/invoices'
       const method = editingInvoice ? 'PUT' : 'POST'
 
+      // คำนวณ due_date จากจำนวนวันใช้งาน
+      const usageDays = parseInt(formData.usage_days) || 0
+      const dueDate = new Date()
+      dueDate.setDate(dueDate.getDate() + usageDays)
+
       const requestBody = {
         user_id: formData.user_id,
         amount: parseFloat(formData.amount),
         currency: formData.currency,
-        due_date: formData.due_date,
+        due_date: dueDate.toISOString(),
         description: formData.description,
         machine_specs: Object.keys(machineSpecs).length > 0 ? machineSpecs : null,
         usage_limit_per_month: formData.usage_limit_per_month
@@ -584,7 +627,7 @@ function InvoicesManagement({
           user_id: '',
           amount: '',
           currency: 'THB',
-          due_date: '',
+          usage_days: '',
           description: '',
           machine_specs: {
             cpu: '',
@@ -640,7 +683,7 @@ function InvoicesManagement({
               user_id: '',
               amount: '',
               currency: 'THB',
-              due_date: '',
+              usage_days: '',
               description: '',
               machine_specs: {
                 cpu: '',
@@ -719,11 +762,17 @@ function InvoicesManagement({
                       onClick={() => {
                         setEditingInvoice(invoice)
                         const machineSpecs = invoice.machine_specs || {}
+                        // คำนวณจำนวนวันใช้งานจาก due_date
+                        const invoiceDate = new Date(invoice.due_date)
+                        const today = new Date()
+                        const daysDiff = Math.ceil((invoiceDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+                        const usageDays = daysDiff > 0 ? daysDiff.toString() : '30'
+
                         setFormData({
                           user_id: invoice.user_id,
                           amount: invoice.amount.toString(),
                           currency: invoice.currency,
-                          due_date: new Date(invoice.due_date).toISOString().slice(0, 16),
+                          usage_days: usageDays,
                           description: invoice.description || '',
                           machine_specs: {
                             cpu: (machineSpecs as any)?.cpu || '',
@@ -794,14 +843,19 @@ function InvoicesManagement({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">วันครบกำหนด</label>
+                <label className="block text-sm font-medium text-gray-700">จำนวนวันใช้งาน</label>
                 <input
-                  type="datetime-local"
-                  value={formData.due_date}
-                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                  type="number"
+                  min="1"
+                  value={formData.usage_days}
+                  onChange={(e) => setFormData({ ...formData, usage_days: e.target.value })}
                   required
+                  placeholder="เช่น 30 (สำหรับ 30 วัน)"
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  ระบบจะคำนวณวันครบกำหนดอัตโนมัติจากวันปัจจุบัน + จำนวนวันใช้งาน
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">รายละเอียด</label>

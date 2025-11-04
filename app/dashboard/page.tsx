@@ -24,6 +24,7 @@ import {
   Server,
   AlertCircle,
 } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function DashboardPage() {
   return (
@@ -149,11 +150,75 @@ function DashboardContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-700 font-medium">กำลังโหลดข้อมูล...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="mb-6 sm:mb-8">
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+
+          {/* Stats Cards Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <Skeleton className="h-4 w-24 mb-2" />
+                    <Skeleton className="h-6 w-32" />
+                  </div>
+                  <Skeleton className="h-12 w-12 rounded-lg" />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Subscription Status Card Skeleton */}
+          <div className="mb-6 sm:mb-8">
+            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-l-4 border-gray-300">
+              <Skeleton className="h-6 w-48 mb-4" />
+              <Skeleton className="h-4 w-full mb-2" />
+              <Skeleton className="h-4 w-3/4 mb-4" />
+              <div className="flex gap-3">
+                <Skeleton className="h-10 w-32" />
+                <Skeleton className="h-10 w-32" />
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions Skeleton */}
+          <div className="mb-6 sm:mb-8">
+            <Skeleton className="h-6 w-32 mb-4" />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border border-gray-200">
+                  <Skeleton className="h-8 w-8 mx-auto mb-2 rounded" />
+                  <Skeleton className="h-4 w-20 mx-auto" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Table Skeleton */}
+          <div className="mb-6 sm:mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+              <div className="p-4 space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-4">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-4 w-28" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     )
   }

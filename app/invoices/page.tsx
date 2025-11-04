@@ -23,6 +23,7 @@ import {
   Loader2,
   CheckCircle2,
 } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function InvoicesPage() {
   return (
@@ -161,11 +162,54 @@ function InvoicesContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-700 font-medium">กำลังโหลดข้อมูล...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="mb-6 sm:mb-8">
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+
+          {/* Mobile Card Skeleton */}
+          <div className="md:hidden grid grid-cols-1 gap-4 sm:gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-xl shadow-sm border-2 border-gray-200 p-4 sm:p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <Skeleton className="h-6 w-32 mb-2" />
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <div className="flex gap-2 mb-3">
+                      <Skeleton className="h-5 w-16 rounded-full" />
+                      <Skeleton className="h-5 w-16 rounded-full" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                </div>
+                <Skeleton className="h-8 w-40 mb-4" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-3/4 mb-4" />
+                <Skeleton className="h-10 w-full rounded-lg" />
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table Skeleton */}
+          <div className="hidden md:block bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+            <div className="p-6">
+              <div className="space-y-4">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex items-center gap-4 pb-4 border-b border-gray-200 last:border-0">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-9 w-24 rounded-lg" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     )
   }
@@ -193,135 +237,136 @@ function InvoicesContent() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            {invoices.map((invoice) => {
-              const isOverdue =
-                invoice.status === 'pending' &&
-                new Date(invoice.due_date) < new Date()
-              const daysUntilDue = differenceInDays(
-                new Date(invoice.due_date),
-                new Date()
-              )
+          <>
+            {/* Mobile: Card View */}
+            <div className="md:hidden grid grid-cols-1 gap-4 sm:gap-6">
+              {invoices.map((invoice) => {
+                const isOverdue =
+                  invoice.status === 'pending' &&
+                  new Date(invoice.due_date) < new Date()
+                const daysUntilDue = differenceInDays(
+                  new Date(invoice.due_date),
+                  new Date()
+                )
 
-              return (
-                <div
-                  key={invoice.id}
-                  className={`bg-white rounded-xl shadow-sm border-2 overflow-hidden transition-all hover:shadow-md ${
-                    isOverdue
-                      ? 'border-red-200 bg-red-50/30'
-                      : invoice.status === 'paid'
-                      ? 'border-green-200 bg-green-50/30'
-                      : 'border-gray-200 hover:border-primary-300'
-                  }`}
-                >
-                  <div className="p-4 sm:p-6">
-                    {/* Header */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <FileText className="h-5 w-5 text-gray-600" />
-                          <h3 className="text-lg font-bold text-gray-900">
-                            {invoice.invoice_number}
-                          </h3>
+                return (
+                  <div
+                    key={invoice.id}
+                    className={`bg-white rounded-xl shadow-sm border-2 overflow-hidden transition-all hover:shadow-md ${
+                      isOverdue
+                        ? 'border-red-200 bg-red-50/30'
+                        : invoice.status === 'paid'
+                        ? 'border-green-200 bg-green-50/30'
+                        : 'border-gray-200 hover:border-primary-300'
+                    }`}
+                  >
+                    <div className="p-4 sm:p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <FileText className="h-5 w-5 text-gray-600" />
+                            <h3 className="text-lg font-bold text-gray-900">
+                              {invoice.invoice_number}
+                            </h3>
+                          </div>
+                          {invoice.description && (
+                            <p className="text-sm text-gray-600 mb-2">
+                              {invoice.description}
+                            </p>
+                          )}
+                          {invoice.machine_specs && (
+                            <div className="flex flex-wrap gap-2 mb-3">
+                              {invoice.machine_specs.cpu && (
+                                <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                                  {invoice.machine_specs.cpu}
+                                </span>
+                              )}
+                              {invoice.machine_specs.ram && (
+                                <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                                  {invoice.machine_specs.ram}
+                                </span>
+                              )}
+                              {invoice.machine_specs.storage && (
+                                <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                                  {invoice.machine_specs.storage}
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
-                        {invoice.description && (
-                          <p className="text-sm text-gray-600 mb-2">
-                            {invoice.description}
-                          </p>
+                        <span
+                          className={`px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${
+                            invoice.status === 'paid'
+                              ? 'bg-green-100 text-green-800'
+                              : isOverdue
+                              ? 'bg-red-100 text-red-800'
+                              : invoice.status === 'cancelled'
+                              ? 'bg-gray-100 text-gray-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}
+                        >
+                          {invoice.status === 'paid'
+                            ? 'ชำระแล้ว'
+                            : isOverdue
+                            ? 'เลยกำหนด'
+                            : invoice.status === 'cancelled'
+                            ? 'ยกเลิก'
+                            : 'รอชำระ'}
+                        </span>
+                      </div>
+
+                      <div className="mb-4">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-2xl sm:text-3xl font-bold text-gray-900">
+                            {invoice.amount.toLocaleString()}
+                          </span>
+                          <span className="text-sm text-gray-600">{invoice.currency}</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 mb-4 text-sm">
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Calendar className="h-4 w-4" />
+                          <span>
+                            ครบกำหนด:{' '}
+                            <span className="font-medium text-gray-900">
+                              {format(new Date(invoice.due_date), 'dd MMMM yyyy', {
+                                locale: th,
+                              })}
+                            </span>
+                          </span>
+                        </div>
+                        {invoice.status === 'paid' && !isOverdue && daysUntilDue > 0 && (
+                          <div className="flex items-center gap-2 text-green-600">
+                            <Clock className="h-4 w-4" />
+                            <span>เหลืออีก {daysUntilDue} วัน</span>
+                          </div>
                         )}
-                        {invoice.machine_specs && (
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            {invoice.machine_specs.cpu && (
-                              <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                                {invoice.machine_specs.cpu}
-                              </span>
-                            )}
-                            {invoice.machine_specs.ram && (
-                              <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                                {invoice.machine_specs.ram}
-                              </span>
-                            )}
-                            {invoice.machine_specs.storage && (
-                              <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                                {invoice.machine_specs.storage}
-                              </span>
-                            )}
+                        {invoice.status === 'pending' && !isOverdue && (
+                          <div className="flex items-center gap-2 text-blue-600">
+                            <Calendar className="h-4 w-4" />
+                            <span>รอชำระเงิน</span>
+                          </div>
+                        )}
+                        {isOverdue && (
+                          <div className="flex items-center gap-2 text-red-600">
+                            <AlertCircle className="h-4 w-4" />
+                            <span className="font-medium">เลยกำหนดชำระแล้ว</span>
+                          </div>
+                        )}
+                        {invoice.status === 'paid' && invoice.paid_at && (
+                          <div className="flex items-center gap-2 text-green-600">
+                            <CheckCircle className="h-4 w-4" />
+                            <span>
+                              ชำระเมื่อ:{' '}
+                              {format(new Date(invoice.paid_at), 'dd/MM/yyyy HH:mm', {
+                                locale: th,
+                              })}
+                            </span>
                           </div>
                         )}
                       </div>
-                      <span
-                        className={`px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${
-                          invoice.status === 'paid'
-                            ? 'bg-green-100 text-green-800'
-                            : isOverdue
-                            ? 'bg-red-100 text-red-800'
-                            : invoice.status === 'cancelled'
-                            ? 'bg-gray-100 text-gray-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}
-                      >
-                        {invoice.status === 'paid'
-                          ? 'ชำระแล้ว'
-                          : isOverdue
-                          ? 'เลยกำหนด'
-                          : invoice.status === 'cancelled'
-                          ? 'ยกเลิก'
-                          : 'รอชำระ'}
-                      </span>
-                    </div>
 
-                    {/* Amount */}
-                    <div className="mb-4">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl sm:text-3xl font-bold text-gray-900">
-                          {invoice.amount.toLocaleString()}
-                        </span>
-                        <span className="text-sm text-gray-600">{invoice.currency}</span>
-                      </div>
-                    </div>
-
-                    {/* Details */}
-                    <div className="space-y-2 mb-4 text-sm">
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Calendar className="h-4 w-4" />
-                        <span>
-                          ครบกำหนด:{' '}
-                          <span className="font-medium text-gray-900">
-                            {format(new Date(invoice.due_date), 'dd MMMM yyyy', {
-                              locale: th,
-                            })}
-                          </span>
-                        </span>
-                      </div>
-                      {invoice.status === 'pending' && !isOverdue && (
-                        <div className="flex items-center gap-2 text-blue-600">
-                          <Clock className="h-4 w-4" />
-                          <span>
-                            เหลืออีก {daysUntilDue} วัน
-                          </span>
-                        </div>
-                      )}
-                      {isOverdue && (
-                        <div className="flex items-center gap-2 text-red-600">
-                          <AlertCircle className="h-4 w-4" />
-                          <span className="font-medium">เลยกำหนดชำระแล้ว</span>
-                        </div>
-                      )}
-                      {invoice.status === 'paid' && invoice.paid_at && (
-                        <div className="flex items-center gap-2 text-green-600">
-                          <CheckCircle className="h-4 w-4" />
-                          <span>
-                            ชำระเมื่อ:{' '}
-                            {format(new Date(invoice.paid_at), 'dd/MM/yyyy HH:mm', {
-                              locale: th,
-                            })}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Actions */}
-                    <div className="mt-4">
                       {invoice.status === 'pending' && !isOverdue && (
                         <button
                           onClick={() => handlePay(invoice)}
@@ -333,10 +378,136 @@ function InvoicesContent() {
                       )}
                     </div>
                   </div>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+
+            {/* Desktop: Table View */}
+            <div className="hidden md:block bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        เลขที่บิล
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        จำนวนเงิน
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        สถานะ
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        วันครบกำหนด
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {invoices.map((invoice) => {
+                      const isOverdue =
+                        invoice.status === 'pending' &&
+                        new Date(invoice.due_date) < new Date()
+                      const daysUntilDue = differenceInDays(
+                        new Date(invoice.due_date),
+                        new Date()
+                      )
+
+                      return (
+                        <tr 
+                          key={invoice.id} 
+                          className={`hover:bg-gray-50 ${
+                            isOverdue ? 'bg-red-50' : ''
+                          }`}
+                        >
+                          <td className="px-6 py-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {invoice.invoice_number}
+                            </div>
+                            {invoice.description && (
+                              <div className="text-sm text-gray-500 mt-1">
+                                {invoice.description}
+                              </div>
+                            )}
+                            {invoice.machine_specs && (
+                              <div className="text-xs text-gray-400 mt-1">
+                                {invoice.machine_specs.cpu && `CPU: ${invoice.machine_specs.cpu}`}
+                                {invoice.machine_specs.ram && ` | RAM: ${invoice.machine_specs.ram}`}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-semibold text-gray-900">
+                              {invoice.amount.toLocaleString()} {invoice.currency}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                invoice.status === 'paid'
+                                  ? 'bg-green-100 text-green-800'
+                                  : isOverdue
+                                  ? 'bg-red-100 text-red-800'
+                                  : invoice.status === 'cancelled'
+                                  ? 'bg-gray-100 text-gray-800'
+                                  : 'bg-yellow-100 text-yellow-800'
+                              }`}
+                            >
+                              {invoice.status === 'paid'
+                                ? 'ชำระแล้ว'
+                                : isOverdue
+                                ? 'เลยกำหนด'
+                                : invoice.status === 'cancelled'
+                                ? 'ยกเลิก'
+                                : 'รอชำระ'}
+                            </span>
+                            {invoice.status === 'paid' && !isOverdue && daysUntilDue > 0 && (
+                              <div className="text-xs text-green-600 mt-1">
+                                เหลืออีก {daysUntilDue} วัน
+                              </div>
+                            )}
+                            {invoice.status === 'pending' && !isOverdue && (
+                              <div className="text-xs text-blue-600 mt-1">
+                                รอชำระเงิน
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {format(new Date(invoice.due_date), 'dd MMMM yyyy', {
+                              locale: th,
+                            })}
+                            {isOverdue && (
+                              <div className="text-xs text-red-600 mt-1">เลยกำหนดแล้ว</div>
+                            )}
+                            {invoice.status === 'paid' && invoice.paid_at && (
+                              <div className="text-xs text-green-600 mt-1">
+                                ชำระเมื่อ: {format(new Date(invoice.paid_at), 'dd/MM/yyyy HH:mm', {
+                                  locale: th,
+                                })}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            {invoice.status === 'pending' && !isOverdue && (
+                              <button
+                                onClick={() => handlePay(invoice)}
+                                className="flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition font-medium"
+                              >
+                                <CreditCard className="h-4 w-4" />
+                                <span>ชำระเงิน</span>
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
         )}
 
         {/* QR Payment Modal */}

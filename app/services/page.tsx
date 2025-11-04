@@ -8,6 +8,7 @@ import Navbar from '@/components/Navbar'
 import { CloudMachineService } from '@/lib/supabase'
 import { format, differenceInDays } from 'date-fns'
 import { th } from 'date-fns/locale'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function ServicesPage() {
   return (
@@ -54,11 +55,56 @@ function ServicesContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-700 font-medium">กำลังโหลดข้อมูล...</p>
-        </div>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-8">
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {[1, 2].map((i) => (
+              <div key={i} className="bg-white rounded-lg shadow-lg border-l-4 border-gray-300 p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1">
+                    <Skeleton className="h-6 w-40 mb-2" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                </div>
+
+                <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                  <Skeleton className="h-4 w-32 mb-3" />
+                  <div className="grid grid-cols-2 gap-3">
+                    {[1, 2, 3, 4].map((j) => (
+                      <div key={j}>
+                        <Skeleton className="h-3 w-16 mb-1" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <Skeleton className="h-4 w-32 mb-2" />
+                  <Skeleton className="h-2 w-full rounded-full" />
+                </div>
+
+                <div className="border-t pt-4 space-y-2">
+                  <div className="flex justify-between">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-28" />
+                  </div>
+                  <div className="flex justify-between">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </main>
       </div>
     )
   }
