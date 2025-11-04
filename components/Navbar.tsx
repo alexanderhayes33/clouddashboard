@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
@@ -11,6 +12,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   LayoutDashboard,
@@ -21,11 +29,13 @@ import {
   LogOut,
   Shield,
   ShoppingCart,
+  Menu,
 } from 'lucide-react'
 
 export default function Navbar() {
   const router = useRouter()
   const { user, clearAuth, isAuthenticated } = useAuthStore()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const handleLogout = () => {
     clearAuth()
@@ -40,52 +50,92 @@ export default function Navbar() {
     return email.charAt(0).toUpperCase()
   }
 
+  const menuItems = [
+    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { href: '/invoices', icon: FileText, label: 'บิลของฉัน' },
+    { href: '/services', icon: Server, label: 'บริการของฉัน' },
+    { href: '/purchase', icon: ShoppingCart, label: 'สั่งซื้อบริการ' },
+  ]
+
+  if (user?.role === 'admin') {
+    menuItems.push({ href: '/admin', icon: Shield, label: 'Admin Panel' })
+  }
+
   return (
     <nav className="bg-white shadow-lg border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-2 sm:space-x-4">
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center space-x-4">
             <div className="flex space-x-1">
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-1 sm:gap-2 text-gray-700 hover:text-primary-600 px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition"
-              >
-                <LayoutDashboard className="h-4 w-4" />
-                <span className="hidden sm:inline">Dashboard</span>
-              </Link>
-              <Link
-                href="/invoices"
-                className="flex items-center gap-1 sm:gap-2 text-gray-700 hover:text-primary-600 px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition"
-              >
-                <FileText className="h-4 w-4" />
-                <span className="hidden sm:inline">บิลของฉัน</span>
-              </Link>
-              <Link
-                href="/services"
-                className="flex items-center gap-1 sm:gap-2 text-gray-700 hover:text-primary-600 px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition"
-              >
-                <Server className="h-4 w-4" />
-                <span className="hidden sm:inline">บริการของฉัน</span>
-              </Link>
-              <Link
-                href="/purchase"
-                className="flex items-center gap-1 sm:gap-2 text-gray-700 hover:text-primary-600 px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition"
-              >
-                <ShoppingCart className="h-4 w-4" />
-                <span className="hidden sm:inline">สั่งซื้อบริการ</span>
-              </Link>
-              {user?.role === 'admin' && (
-                <Link
-                  href="/admin"
-                  className="flex items-center gap-1 sm:gap-2 text-gray-700 hover:text-primary-600 px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition"
-                >
-                  <Shield className="h-4 w-4" />
-                  <span className="hidden sm:inline">Admin</span>
-                </Link>
-              )}
+              {menuItems.map((item) => {
+                const Icon = item.icon
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="flex items-center gap-2 text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition"
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.label}
+                  </Link>
+                )
+              })}
             </div>
           </div>
-          <div className="flex items-center">
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden">
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <button className="flex items-center gap-2 text-gray-700 hover:text-primary-600 p-2 rounded-md">
+                  <Menu className="h-6 w-6" />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+                <SheetHeader>
+                  <SheetTitle className="text-left">เมนู</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6 flex flex-col space-y-2">
+                  {menuItems.map((item) => {
+                    const Icon = item.icon
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition"
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span className="font-medium">{item.label}</span>
+                      </Link>
+                    )
+                  })}
+                  <div className="border-t pt-4 mt-4">
+                    <div className="px-4 py-3 mb-4">
+                      <p className="text-sm font-medium text-gray-900">
+                        {user?.full_name || 'ผู้ใช้'}
+                      </p>
+                      <p className="text-xs text-gray-500">{user?.email}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen(false)
+                        handleLogout()
+                      }}
+                      className="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition"
+                    >
+                      <LogOut className="h-5 w-5" />
+                      <span className="font-medium">ออกจากระบบ</span>
+                    </button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+
+          {/* Profile Dropdown (Desktop) */}
+          <div className="hidden md:flex items-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 hover:opacity-80 transition">
@@ -153,6 +203,15 @@ export default function Navbar() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          </div>
+
+          {/* Mobile Profile Avatar (แสดงแค่ avatar) */}
+          <div className="md:hidden flex items-center">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="bg-primary-600 text-white">
+                {getInitials(user?.email)}
+              </AvatarFallback>
+            </Avatar>
           </div>
         </div>
       </div>
